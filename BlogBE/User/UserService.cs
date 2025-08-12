@@ -11,15 +11,14 @@ public class UserService
         _context = context;
     }
 
-    public async Task<User> RegisterAsync(User user)
+    public async Task RegisterAsync(DB.User user)
     {
         user.Password= BCrypt.Net.BCrypt.HashPassword(user.Password);
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        return user;
     }
     
-    public async Task<User> GetUserByIdAsync(int id)
+    public async Task<DB.User> GetUserByIdAsync(int id)
     {
         return await _context.Users.FindAsync(id);
     }

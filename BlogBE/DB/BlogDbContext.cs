@@ -6,7 +6,7 @@ namespace BlogBE.Data;
 
 public class BlogDbContext : DbContext
 {
-    public DbSet<User.User> Users { get; set; }
+    public DbSet<DB.User> Users { get; set; }
 
     public BlogDbContext(DbContextOptions<BlogDbContext> options) : base(options) { }
 }

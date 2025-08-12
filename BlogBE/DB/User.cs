@@ -1,4 +1,4 @@
-namespace BlogBE.User;
+namespace BlogBE.DB;
 
 public class User
 {
