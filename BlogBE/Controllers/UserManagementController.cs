@@ -1,4 +1,5 @@
 using BlogBE.DTO;
+using BlogBE.MongoDb;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,13 @@ namespace BlogBE.Controllers;
 [Route("[controller]")]
 public class UserManagementController : ControllerBase
 {
+    private readonly ActivityLogService _activityLogService;
     private readonly UserService _userService;
 
-    public UserManagementController(UserService userService)
+    public UserManagementController(UserService userService, ActivityLogService activityLogService)
     {
         _userService = userService;
+        _activityLogService = activityLogService;
     }
 
     [HttpPost(Name = "CreateUser")]
@@ -32,6 +35,12 @@ public class UserManagementController : ControllerBase
         };
         await _userService.RegisterAsync(user);
         var createdUser = await _userService.GetUserByIdAsync(user.Id);
+
+        await _activityLogService.LogAsync(new ActivityLog
+        {
+            UserId = createdUser.Id,
+            EventType = "UserRegistered"
+        });
 
         // Return only one object with the desired properties in a JSON format
         return Ok(new

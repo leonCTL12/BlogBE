@@ -1,8 +1,10 @@
 using BlogBE.Data;
 using BlogBE.DTO;
+using BlogBE.MongoDb;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,23 @@ builder.Services.AddScoped<IValidator<RegisterUserDto>, RegisterUserValidator>()
 builder.Services.AddScoped<UserService>();
 builder.Services.AddDbContext<BlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var mongoConn = builder.Configuration.GetConnectionString("Mongo")!;
+builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConn));
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var client = serviceProvider.GetRequiredService<IMongoClient>();
+    var dbName = builder.Configuration["Mongo:Database"];
+    return client.GetDatabase(dbName);
+});
+
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var db = serviceProvider.GetRequiredService<IMongoDatabase>();
+    var collectionName = builder.Configuration["Mongo:Collection"];
+    return db.GetCollection<ActivityLog>(collectionName);
+});
+builder.Services.AddSingleton<ActivityLogService>();
 
 var app = builder.Build();
 
