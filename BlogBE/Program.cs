@@ -6,11 +6,20 @@ using BlogBE.User;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo
+    .File("Log/log-.txt",
+        rollingInterval: RollingInterval.Day) //This automatically name the log files with the current date
+    .CreateLogger();
 
+// Add services to the container.
+builder.Host.UseSerilog();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

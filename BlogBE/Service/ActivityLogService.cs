@@ -9,11 +9,15 @@ public class ActivityLogService
     private readonly IMongoCollection<ActivityLog> _collection;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
+    private readonly ILogger<ActivityLogService>
+        _logger; //This is not a business activity log, this is a system health log instead
+
     public ActivityLogService(IMongoCollection<ActivityLog> collection, IHttpContextAccessor http,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor, ILogger<ActivityLogService> logger)
     {
         _collection = collection;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public async Task LogAsync(string eventType, int? userId = null, object? metadata = null)
@@ -32,7 +36,8 @@ public class ActivityLogService
                 ? metadata.ToBsonDocument()
                 : new BsonDocument()
         };
-
+        _logger.LogInformation("User {User} performed {Action} at {Time}",
+            userId ?? 0, eventType, log.OccurredAt);
         await _collection.InsertOneAsync(log);
     }
 }
