@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace BlogBE.DTO;
 
-public class RegisterUserValidator : AbstractValidator<RegisterUserDto>
+public class RegisterUserValidator : AbstractValidator<RegisterRequest>
 {
     public RegisterUserValidator()
     {

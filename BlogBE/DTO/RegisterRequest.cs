@@ -1,6 +1,6 @@
 namespace BlogBE.DTO;
 
-public record RegisterUserDto(
+public record RegisterRequest(
     string Email,
     string Password,
     string DisplayName

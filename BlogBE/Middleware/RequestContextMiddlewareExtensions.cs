@@ -2,8 +2,8 @@ namespace BlogBE.Middleware;
 
 public static class RequestContextMiddlewareExtensions
 {
-    public static IApplicationBuilder UseRequestContext(this IApplicationBuilder builder)
+    public static void UseRequestContext(this IApplicationBuilder builder)
     {
-        return builder.UseMiddleware<RequestContextMiddleware>();
+        builder.UseMiddleware<RequestContextMiddleware>();
     }
 }
