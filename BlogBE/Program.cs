@@ -1,5 +1,6 @@
 using BlogBE.Data;
 using BlogBE.DTO;
+using BlogBE.Middleware;
 using BlogBE.MongoDb;
 using BlogBE.User;
 using FluentValidation;
@@ -34,6 +35,7 @@ builder.Services.AddSingleton(serviceProvider =>
     return db.GetCollection<ActivityLog>(collectionName);
 });
 builder.Services.AddSingleton<ActivityLogService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -41,9 +43,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
+//This is the sequence of middleware that will be executed for each request
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
+app.UseRequestContext();
 
 app.MapControllers();
 

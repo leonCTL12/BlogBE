@@ -1,5 +1,5 @@
+using BlogBE.Constants;
 using BlogBE.DTO;
-using BlogBE.MongoDb;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -36,11 +36,7 @@ public class UserManagementController : ControllerBase
         await _userService.RegisterAsync(user);
         var createdUser = await _userService.GetUserByIdAsync(user.Id);
 
-        await _activityLogService.LogAsync(new ActivityLog
-        {
-            UserId = createdUser.Id,
-            EventType = "UserRegistered"
-        });
+        await _activityLogService.LogAsync(ActivityLogEvent.UserRegistered, createdUser.Id);
 
         // Return only one object with the desired properties in a JSON format
         return Ok(new
