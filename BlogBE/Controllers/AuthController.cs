@@ -54,12 +54,25 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
         var user = await _userService.GetUserByEmailAsync(dto.Email);
-        if (user == null) return Unauthorized(new { message = "Invalid email or password." });
+        if (user == null)
+        {
+            await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, null,
+                new { email = dto.Email, reason = "User not found" });
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
 
         var isPasswordValid = await _userService.VerifyPasswordAsync(user, dto.Password);
-        if (!isPasswordValid) return Unauthorized(new { message = "Invalid email or password." });
+        if (!isPasswordValid)
+        {
+            await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, user.Id,
+                new { email = dto.Email, reason = "Invalid password" });
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
 
         var (token, expiresAt) = _jwtTokenFactory.CreateToken(user);
+
+        await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedIn, user.Id,
+            new { email = dto.Email, tokenExpiration = expiresAt });
         return Ok(new LoginResponseDto
         {
             UserId = user.Id,
