@@ -1,10 +1,14 @@
+using System.Text;
 using BlogBE.Data;
 using BlogBE.DTO;
+using BlogBE.Jwt;
 using BlogBE.Middleware;
 using BlogBE.MongoDb;
 using BlogBE.User;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 
@@ -42,6 +46,29 @@ builder.Services.AddSingleton(serviceProvider =>
 builder.Services.AddSingleton<ActivityLogService>();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
+if (jwtOptions == null) throw new InvalidOperationException("JWT options are not configured properly.");
+var key = Encoding.UTF8.GetBytes(jwtOptions.SigningKey);
+
+builder.Services.AddSingleton<JwtTokenFactory>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtOptions.Issuer,
+        ValidAudience = jwtOptions.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.FromMinutes(1)
+    };
+});
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 
@@ -50,6 +77,7 @@ if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 //This is the sequence of middleware that will be executed for each request
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseRequestContext();
 

@@ -1,5 +1,6 @@
 using BlogBE.Constants;
 using BlogBE.DTO;
+using BlogBE.Jwt;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -13,12 +14,15 @@ namespace BlogBE.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ActivityLogService _activityLogService;
+    private readonly JwtTokenFactory _jwtTokenFactory;
     private readonly UserService _userService;
 
-    public AuthController(UserService userService, ActivityLogService activityLogService)
+    public AuthController(UserService userService, ActivityLogService activityLogService,
+        JwtTokenFactory jwtTokenFactory)
     {
         _userService = userService;
         _activityLogService = activityLogService;
+        _jwtTokenFactory = jwtTokenFactory;
     }
 
     [HttpPost("register")]
@@ -41,6 +45,28 @@ public class AuthController : ControllerBase
             id = createdUser.Id,
             userName = createdUser.UserName,
             email = createdUser.Email
+        });
+    }
+
+    [HttpPost("login")]
+    //TODO: add business logging
+    //TODO: add system logging
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
+    {
+        var user = await _userService.GetUserByEmailAsync(dto.Email);
+        if (user == null) return Unauthorized(new { message = "Invalid email or password." });
+
+        var isPasswordValid = await _userService.VerifyPasswordAsync(user, dto.Password);
+        if (!isPasswordValid) return Unauthorized(new { message = "Invalid email or password." });
+
+        var (token, expiresAt) = _jwtTokenFactory.CreateToken(user);
+        return Ok(new LoginResponseDto
+        {
+            UserId = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            Token = token,
+            TokenExpiration = expiresAt
         });
     }
 }
