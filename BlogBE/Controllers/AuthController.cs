@@ -49,8 +49,6 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    //TODO: add business logging
-    //TODO: add system logging
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
         var user = await _userService.GetUserByEmailAsync(dto.Email);
