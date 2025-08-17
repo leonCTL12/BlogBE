@@ -65,4 +65,25 @@ public class BlogPostController : ControllerBase
         // Return a success response
         return Ok(new { message = "Post created successfully", title = requestDto.Title });
     }
+
+    [HttpDelete("delete/{postId}")]
+    [Authorize]
+    public async Task<IActionResult> DeletePost(int postId)
+    {
+        var userId = await GetUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _blogPostService.TryDeletePostAsync(postId, userId.Value);
+
+        if (!result)
+        {
+            return NotFound(new { message = "Post not found or you are not the author." });
+        }
+
+        // Return a success response
+        return Ok(new { message = "Post deleted successfully", postId });
+    }
 }

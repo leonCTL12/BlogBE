@@ -24,4 +24,17 @@ public class BlogPostService
         _dbContext.BlogPosts.Add(post);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<bool> TryDeletePostAsync(int postId, int userId)
+    {
+        var post = await _dbContext.BlogPosts.FindAsync(postId);
+        if (post == null || post.AuthorId != userId)
+        {
+            return false; // Post not found or user is not the author
+        }
+
+        _dbContext.BlogPosts.Remove(post);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }
