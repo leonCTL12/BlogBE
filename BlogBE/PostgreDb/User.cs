@@ -1,4 +1,4 @@
-namespace BlogBE.DB;
+namespace BlogBE.PostgreDb;
 
 public class User
 {

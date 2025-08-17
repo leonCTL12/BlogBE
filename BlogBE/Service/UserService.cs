@@ -1,8 +1,8 @@
-using BlogBE.Data;
 using BlogBE.DTO;
+using BlogBE.PostgreDb;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlogBE.User;
+namespace BlogBE.Service;
 
 public class UserService
 {
@@ -15,7 +15,7 @@ public class UserService
 
     public async Task<int> RegisterAsync(RegisterRequest dto)
     {
-        var user = new DB.User
+        var user = new PostgreDb.User
         {
             Email = dto.Email,
             Password = dto.Password, // Password will be hashed in the service
@@ -28,17 +28,17 @@ public class UserService
         return user.Id;
     }
 
-    public async Task<DB.User?> GetUserByIdAsync(int id)
+    public async Task<PostgreDb.User?> GetUserByIdAsync(int id)
     {
         return await _dbContext.Users.FindAsync(id);
     }
 
-    public async Task<DB.User?> GetUserByEmailAsync(string email)
+    public async Task<PostgreDb.User?> GetUserByEmailAsync(string email)
     {
         return await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<bool> VerifyPasswordAsync(DB.User user, string password)
+    public async Task<bool> VerifyPasswordAsync(PostgreDb.User user, string password)
     {
         return BCrypt.Net.BCrypt.Verify(password, user.Password);
     }

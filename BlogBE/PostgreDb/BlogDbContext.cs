@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 //Entity framework is a bridge between C# code and db
 //it translates C# code to SQL queries and vice versa
 
-namespace BlogBE.Data;
+namespace BlogBE.PostgreDb;
 
 public class BlogDbContext : DbContext
 {
@@ -11,5 +11,5 @@ public class BlogDbContext : DbContext
     {
     }
 
-    public DbSet<DB.User?> Users { get; set; }
+    public DbSet<User> Users { get; set; }
 }

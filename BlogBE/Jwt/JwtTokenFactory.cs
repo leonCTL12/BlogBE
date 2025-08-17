@@ -15,7 +15,7 @@ public class JwtTokenFactory
         _options = options.Value;
     }
 
-    public (string token, DateTime expiresAt) CreateToken(DB.User user)
+    public (string token, DateTime expiresAt) CreateToken(PostgreDb.User user)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

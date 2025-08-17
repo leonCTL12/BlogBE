@@ -1,9 +1,10 @@
 using System.Text;
-using BlogBE.Data;
 using BlogBE.DTO;
 using BlogBE.Jwt;
 using BlogBE.Middleware;
 using BlogBE.MongoDb;
+using BlogBE.PostgreDb;
+using BlogBE.Service;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,7 +49,11 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
-if (jwtOptions == null) throw new InvalidOperationException("JWT options are not configured properly.");
+if (jwtOptions == null)
+{
+    throw new InvalidOperationException("JWT options are not configured properly.");
+}
+
 var key = Encoding.UTF8.GetBytes(jwtOptions.SigningKey);
 
 builder.Services.AddSingleton<JwtTokenFactory>();

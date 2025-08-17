@@ -1,6 +1,7 @@
 using BlogBE.Constants;
 using BlogBE.DTO;
 using BlogBE.Jwt;
+using BlogBE.Service;
 using BlogBE.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +32,10 @@ public class AuthController : ControllerBase
     {
         var result = await validator.ValidateAsync(dto);
 
-        if (!result.IsValid) return BadRequest(result.Errors);
+        if (!result.IsValid)
+        {
+            return BadRequest(result.Errors);
+        }
 
 
         var id = await _userService.RegisterAsync(dto);
