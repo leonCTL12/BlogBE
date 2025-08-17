@@ -1,10 +1,9 @@
 namespace BlogBE.DTO;
 
-public class LoginResponseDto
-{
-    public int UserId { get; set; }
-    public string UserName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
-    public DateTime TokenExpiration { get; set; }
-}
+public record LoginResponseDto(
+    int UserId,
+    string UserName,
+    string Email,
+    string Token,
+    DateTime TokenExpiration
+);

@@ -72,12 +72,12 @@ public class AuthController : ControllerBase
         await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedIn, user.Id,
             new { email = dto.Email, tokenExpiration = expiresAt });
         return Ok(new LoginResponseDto
-        {
-            UserId = user.Id,
-            UserName = user.UserName,
-            Email = user.Email,
-            Token = token,
-            TokenExpiration = expiresAt
-        });
+        (
+            user.Id,
+            user.UserName,
+            user.Email,
+            token,
+            expiresAt
+        ));
     }
 }
