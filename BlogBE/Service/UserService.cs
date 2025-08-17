@@ -13,7 +13,7 @@ public class UserService
         _dbContext = dbContext;
     }
 
-    public async Task<int> RegisterAsync(RegisterRequest dto)
+    public async Task<int> RegisterAsync(RegisterRequestDto dto)
     {
         var user = new PostgreDb.User
         {
@@ -31,6 +31,11 @@ public class UserService
     public async Task<PostgreDb.User?> GetUserByIdAsync(int id)
     {
         return await _dbContext.Users.FindAsync(id);
+    }
+
+    public async Task<bool> UserExistsAsync(int id)
+    {
+        return await _dbContext.Users.AnyAsync(u => u.Id == id);
     }
 
     public async Task<PostgreDb.User?> GetUserByEmailAsync(string email)

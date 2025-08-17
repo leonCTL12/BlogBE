@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace BlogBE.DTO;
 
-public class RegisterUserValidator : AbstractValidator<RegisterRequest>
+public class RegisterRequestValidator : AbstractValidator<RegisterRequestDto>
 {
-    public RegisterUserValidator()
+    public RegisterRequestValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")

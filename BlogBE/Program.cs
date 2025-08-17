@@ -24,8 +24,10 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterUserValidator>();
+builder.Services.AddScoped<IValidator<RegisterRequestDto>, RegisterRequestValidator>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IValidator<CreatePostRequestDto>, CreatePostRequestValidator>();
+builder.Services.AddScoped<BlogPostService>();
 builder.Services.AddDbContext<BlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 

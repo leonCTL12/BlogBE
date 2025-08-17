@@ -1,0 +1,68 @@
+using System.Security.Claims;
+using BlogBE.DTO;
+using BlogBE.Service;
+using BlogBE.User;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BlogBE.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class BlogPostController : ControllerBase
+{
+    private readonly BlogPostService _blogPostService;
+    private readonly UserService _userService;
+
+    public BlogPostController(UserService userService, BlogPostService blogPostService)
+    {
+        _userService = userService;
+        _blogPostService = blogPostService;
+    }
+
+    private async Task<int?> GetUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+        {
+            return null;
+        }
+
+        if (!int.TryParse(claim.Value, out var userId))
+        {
+            return null;
+        }
+
+
+        if (!await _userService.UserExistsAsync(userId))
+        {
+            return null;
+        }
+
+        return userId;
+    }
+
+    [HttpPost("create")]
+    [Authorize]
+    public async Task<IActionResult> CreatePost([FromBody] CreatePostRequestDto requestDto,
+        [FromServices] IValidator<CreatePostRequestDto> validator)
+    {
+        var validationResult = await validator.ValidateAsync(requestDto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors);
+        }
+
+        var userId = await GetUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        await _blogPostService.CreatePostAsync(requestDto.Title, requestDto.Content, userId.Value);
+
+        // Return a success response
+        return Ok(new { message = "Post created successfully", title = requestDto.Title });
+    }
+}
