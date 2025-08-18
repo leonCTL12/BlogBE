@@ -75,4 +75,9 @@ public class BlogPostService
             .Take(pageSize)
             .ToListAsync();
     }
+
+    public async Task<bool> PostExistsAsync(int postId)
+    {
+        return await _dbContext.BlogPosts.AnyAsync(post => post.Id == postId);
+    }
 }
