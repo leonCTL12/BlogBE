@@ -65,4 +65,14 @@ public class BlogPostService
             .Take(pageSize)
             .ToListAsync();
     }
+
+    public async Task<List<BlogPost>> GetPostsByUserIdAsync(int userId, int page = 1, int pageSize = 10)
+    {
+        return await _dbContext.BlogPosts
+            .Where(post => post.AuthorId == userId)
+            .OrderByDescending(post => post.UpdatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
 }

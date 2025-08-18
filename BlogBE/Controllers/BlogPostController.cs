@@ -117,4 +117,22 @@ public class BlogPostController : ControllerBase
         var posts = await _blogPostService.GetPostsAsync(page, pageSize);
         return Ok(posts);
     }
+
+    [HttpGet("get/{userId}")]
+    public async Task<IActionResult> GetPostsByUserId(int userId, [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (!await _userService.UserExistsAsync(userId))
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var posts = await _blogPostService.GetPostsByUserIdAsync(userId, page, pageSize);
+        if (posts == null || !posts.Any())
+        {
+            return NotFound(new { message = "No posts" });
+        }
+
+        return Ok(posts);
+    }
 }
