@@ -21,28 +21,6 @@ public class BlogPostController : ControllerBase
         _blogPostService = blogPostService;
     }
 
-    private async Task<int?> GetUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (claim == null)
-        {
-            return null;
-        }
-
-        if (!int.TryParse(claim.Value, out var userId))
-        {
-            return null;
-        }
-
-
-        if (!await _userService.UserExistsAsync(userId))
-        {
-            return null;
-        }
-
-        return userId;
-    }
-
     [HttpPost("create")]
     [Authorize]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostRequestDto requestDto,
@@ -54,7 +32,7 @@ public class BlogPostController : ControllerBase
             return BadRequest(validationResult.Errors);
         }
 
-        var userId = await GetUserId();
+        var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
         if (userId == null)
         {
             return Unauthorized();
@@ -70,7 +48,8 @@ public class BlogPostController : ControllerBase
     [Authorize]
     public async Task<IActionResult> DeletePost(int postId)
     {
-        var userId = await GetUserId();
+        var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
+
         if (userId == null)
         {
             return Unauthorized();
@@ -91,7 +70,8 @@ public class BlogPostController : ControllerBase
     public async Task<IActionResult> UpdatePost(int postId, [FromBody] UpdatePostRequestDto requestDto,
         [FromServices] IValidator<UpdatePostRequestDto> validator)
     {
-        var userId = await GetUserId();
+        var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
+
         if (userId == null)
         {
             return Unauthorized();

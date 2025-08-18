@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using BlogBE.DTO;
 using BlogBE.PostgreDb;
 using Microsoft.EntityFrameworkCore;
@@ -46,5 +47,26 @@ public class UserService
     public async Task<bool> VerifyPasswordAsync(PostgreDb.User user, string password)
     {
         return BCrypt.Net.BCrypt.Verify(password, user.Password);
+    }
+
+    public async Task<int?> GetUserIdByClaimASync(Claim? claim)
+    {
+        if (claim == null)
+        {
+            return null;
+        }
+
+        if (!int.TryParse(claim.Value, out var userId))
+        {
+            return null;
+        }
+
+
+        if (!await UserExistsAsync(userId))
+        {
+            return null;
+        }
+
+        return userId;
     }
 }
