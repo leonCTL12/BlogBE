@@ -110,4 +110,11 @@ public class BlogPostController : ControllerBase
 
         return Ok(new { message = "Post updated successfully", postId, title = requestDto.Title });
     }
+
+    [HttpGet("get")]
+    public async Task<IActionResult> GetPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var posts = await _blogPostService.GetPostsAsync(page, pageSize);
+        return Ok(posts);
+    }
 }

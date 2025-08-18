@@ -1,4 +1,5 @@
 using BlogBE.PostgreDb;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlogBE.User;
 
@@ -18,7 +19,8 @@ public class BlogPostService
             Title = title,
             Content = content,
             AuthorId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _dbContext.BlogPosts.Add(post);
@@ -53,5 +55,14 @@ public class BlogPostService
         _dbContext.BlogPosts.Update(post);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<BlogPost>> GetPostsAsync(int page = 1, int pageSize = 10)
+    {
+        return await _dbContext.BlogPosts
+            .OrderByDescending(post => post.UpdatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 }
