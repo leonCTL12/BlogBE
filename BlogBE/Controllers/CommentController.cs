@@ -50,4 +50,23 @@ public class CommentController : ControllerBase
 
         return Ok(new { message = "Comment created successfully", content = requestDto.Content });
     }
+
+    [HttpDelete("delete/{commentId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteComment(int commentId)
+    {
+        var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _commentService.DeleteCommentAsync(commentId, userId.Value);
+        if (!result)
+        {
+            return NotFound(new { message = "Comment not found or you are not the author" });
+        }
+
+        return Ok(new { message = "Comment deleted successfully" });
+    }
 }

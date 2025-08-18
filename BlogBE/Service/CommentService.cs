@@ -24,4 +24,17 @@ public class CommentService
         _dbContext.Comments.Add(comment);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<bool> DeleteCommentAsync(int commentId, int userId)
+    {
+        var comment = await _dbContext.Comments.FindAsync(commentId);
+        if (comment == null || comment.AuthorId != userId)
+        {
+            return false; // Comment not found or user is not the author
+        }
+
+        _dbContext.Comments.Remove(comment);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }
