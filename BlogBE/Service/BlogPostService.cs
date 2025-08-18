@@ -37,4 +37,21 @@ public class BlogPostService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> TryUpdatePostAsync(int postId, string title, string content, int userId)
+    {
+        var post = await _dbContext.BlogPosts.FindAsync(postId);
+        if (post == null || post.AuthorId != userId)
+        {
+            return false; // Post not found or user is not the author
+        }
+
+        post.Title = title;
+        post.Content = content;
+        post.UpdatedAt = DateTime.UtcNow;
+
+        _dbContext.BlogPosts.Update(post);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }

@@ -83,7 +83,31 @@ public class BlogPostController : ControllerBase
             return NotFound(new { message = "Post not found or you are not the author." });
         }
 
-        // Return a success response
         return Ok(new { message = "Post deleted successfully", postId });
+    }
+
+    [HttpPut("update/{postId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdatePost(int postId, [FromBody] UpdatePostRequestDto requestDto,
+        [FromServices] IValidator<UpdatePostRequestDto> validator)
+    {
+        var userId = await GetUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var validationResult = await validator.ValidateAsync(requestDto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors);
+        }
+
+        if (!await _blogPostService.TryUpdatePostAsync(postId, requestDto.Title, requestDto.Content, userId.Value))
+        {
+            return NotFound(new { message = "Post not found or you are not the author." });
+        }
+
+        return Ok(new { message = "Post updated successfully", postId, title = requestDto.Title });
     }
 }
