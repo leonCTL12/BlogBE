@@ -57,7 +57,7 @@ public class BlogPostService
         return true;
     }
 
-    public async Task<List<BlogPost>> GetPostsAsync(int page = 1, int pageSize = 10)
+    public async Task<List<BlogPost>> GetPostsAsync(int page, int pageSize)
     {
         return await _dbContext.BlogPosts
             .OrderByDescending(post => post.UpdatedAt)
@@ -66,7 +66,7 @@ public class BlogPostService
             .ToListAsync();
     }
 
-    public async Task<List<BlogPost>> GetPostsByUserIdAsync(int userId, int page = 1, int pageSize = 10)
+    public async Task<List<BlogPost>> GetPostsByUserIdAsync(int userId, int page, int pageSize)
     {
         return await _dbContext.BlogPosts
             .Where(post => post.AuthorId == userId)

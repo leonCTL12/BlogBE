@@ -69,4 +69,17 @@ public class CommentController : ControllerBase
 
         return Ok(new { message = "Comment deleted successfully" });
     }
+
+    [HttpGet("get/{postId}")]
+    public async Task<IActionResult> GetComments(int postId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var postExists = await _blogPostService.PostExistsAsync(postId);
+        if (!postExists)
+        {
+            return NotFound(new { message = "Post not found" });
+        }
+
+        var comments = await _commentService.GetCommentForPostAsync(postId, page, pageSize);
+        return Ok(comments);
+    }
 }

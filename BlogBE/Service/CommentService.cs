@@ -1,4 +1,5 @@
 using BlogBE.PostgreDb;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlogBE.Service;
 
@@ -36,5 +37,15 @@ public class CommentService
         _dbContext.Comments.Remove(comment);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<Comment>> GetCommentForPostAsync(int postId, int page, int pageSize)
+    {
+        return await _dbContext.Comments
+            .Where(c => c.PostId == postId)
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 }
