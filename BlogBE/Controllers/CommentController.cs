@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BlogBE.Constants;
 using BlogBE.DTO;
 using BlogBE.Service;
 using BlogBE.User;
@@ -12,18 +13,20 @@ namespace BlogBE.Controllers;
 [Route("api/[controller]")]
 public class CommentController : ControllerBase
 {
+    private readonly ActivityLogService _activityLogService;
     private readonly BlogPostService _blogPostService;
     private readonly CommentPermissionService _commentPermissionService;
     private readonly CommentService _commentService;
     private readonly UserService _userService;
 
     public CommentController(CommentService commentService, UserService userService, BlogPostService blogPostService,
-        CommentPermissionService commentPermissionService)
+        CommentPermissionService commentPermissionService, ActivityLogService activityLogService)
     {
         _commentService = commentService;
         _userService = userService;
         _blogPostService = blogPostService;
         _commentPermissionService = commentPermissionService;
+        _activityLogService = activityLogService;
     }
 
     [HttpPost("create")]
@@ -50,7 +53,7 @@ public class CommentController : ControllerBase
         }
 
         await _commentService.CreateCommentAsync(requestDto.Content, requestDto.PostId, userId.Value);
-
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserCreatedComment, userId.Value);
         return Ok(new { message = "Comment created successfully", content = requestDto.Content });
     }
 
@@ -83,6 +86,7 @@ public class CommentController : ControllerBase
             return NotFound(new { message = "Comment not found or you are not the author" });
         }
 
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserDeletedComment, userId.Value);
         return Ok(new { message = "Comment deleted successfully" });
     }
 

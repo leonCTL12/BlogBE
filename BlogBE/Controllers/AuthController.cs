@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
         var id = await _userService.RegisterAsync(dto);
         var createdUser = await _userService.GetUserByIdAsync(id);
 
-        await _activityLogService.LogAsync(ActivityLogEvent.UserRegistered, createdUser.Id);
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserRegistered, createdUser.Id);
 
         // Return only one object with the desired properties in a JSON format
         return Ok(new
@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
         var user = await _userService.GetUserByEmailAsync(dto.Email);
         if (user == null)
         {
-            await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, null,
+            _ = _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, null,
                 new { email = dto.Email, reason = "User not found" });
             return Unauthorized(new { message = "Invalid email or password." });
         }
@@ -66,14 +66,14 @@ public class AuthController : ControllerBase
         var isPasswordValid = await _userService.VerifyPasswordAsync(user, dto.Password);
         if (!isPasswordValid)
         {
-            await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, user.Id,
+            _ = _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, user.Id,
                 new { email = dto.Email, reason = "Invalid password" });
             return Unauthorized(new { message = "Invalid email or password." });
         }
 
         var (token, expiresAt) = _jwtTokenFactory.CreateToken(user);
 
-        await _activityLogService.LogAsync(ActivityLogEvent.UserLoggedIn, user.Id,
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserLoggedIn, user.Id,
             new { email = dto.Email, tokenExpiration = expiresAt });
         return Ok(new LoginResponseDto
         (

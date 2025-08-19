@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BlogBE.Constants;
 using BlogBE.DTO;
 using BlogBE.Service;
 using BlogBE.User;
@@ -12,13 +13,16 @@ namespace BlogBE.Controllers;
 [Route("api/[controller]")]
 public class BlogPostController : ControllerBase
 {
+    private readonly ActivityLogService _activityLogService;
     private readonly BlogPostService _blogPostService;
     private readonly UserService _userService;
 
-    public BlogPostController(UserService userService, BlogPostService blogPostService)
+    public BlogPostController(UserService userService, BlogPostService blogPostService,
+        ActivityLogService activityLogService)
     {
         _userService = userService;
         _blogPostService = blogPostService;
+        _activityLogService = activityLogService;
     }
 
     [HttpPost("create")]
@@ -39,7 +43,7 @@ public class BlogPostController : ControllerBase
         }
 
         await _blogPostService.CreatePostAsync(requestDto.Title, requestDto.Content, userId.Value);
-
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserCreatedPost, userId.Value);
         // Return a success response
         return Ok(new { message = "Post created successfully", title = requestDto.Title });
     }
@@ -61,6 +65,8 @@ public class BlogPostController : ControllerBase
         {
             return NotFound(new { message = "Post not found or you are not the author." });
         }
+
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserDeletedPost, userId.Value);
 
         return Ok(new { message = "Post deleted successfully", postId });
     }
@@ -88,6 +94,7 @@ public class BlogPostController : ControllerBase
             return NotFound(new { message = "Post not found or you are not the author." });
         }
 
+        _ = _activityLogService.LogAsync(ActivityLogEvent.UserUpdatedPost, userId.Value);
         return Ok(new { message = "Post updated successfully", postId, title = requestDto.Title });
     }
 
