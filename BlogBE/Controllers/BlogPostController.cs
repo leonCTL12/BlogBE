@@ -108,7 +108,7 @@ public class BlogPostController : ControllerBase
         }
 
         var posts = await _blogPostService.GetPostsByUserIdAsync(userId, page, pageSize);
-        if (posts == null || !posts.Any())
+        if (!posts.Any())
         {
             return NotFound(new { message = "No posts" });
         }

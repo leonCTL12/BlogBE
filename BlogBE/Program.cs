@@ -37,6 +37,7 @@ builder.Services.AddScoped<IValidator<CreateCommentRequestDto>, CreateCommentReq
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<BlogPostService>();
 builder.Services.AddScoped<CommentService>();
+builder.Services.AddScoped<CommentPermissionService>();
 builder.Services.AddDbContext<BlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 

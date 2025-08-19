@@ -80,4 +80,10 @@ public class BlogPostService
     {
         return await _dbContext.BlogPosts.AnyAsync(post => post.Id == postId);
     }
+
+    public async Task<bool> UserIsAuthorAsync(int postId, int userId)
+    {
+        var post = await _dbContext.BlogPosts.FindAsync(postId);
+        return post != null && post.AuthorId == userId;
+    }
 }

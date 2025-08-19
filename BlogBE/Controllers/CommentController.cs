@@ -13,14 +13,17 @@ namespace BlogBE.Controllers;
 public class CommentController : ControllerBase
 {
     private readonly BlogPostService _blogPostService;
+    private readonly CommentPermissionService _commentPermissionService;
     private readonly CommentService _commentService;
     private readonly UserService _userService;
 
-    public CommentController(CommentService commentService, UserService userService, BlogPostService blogPostService)
+    public CommentController(CommentService commentService, UserService userService, BlogPostService blogPostService,
+        CommentPermissionService commentPermissionService)
     {
         _commentService = commentService;
         _userService = userService;
         _blogPostService = blogPostService;
+        _commentPermissionService = commentPermissionService;
     }
 
     [HttpPost("create")]
@@ -61,7 +64,20 @@ public class CommentController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _commentService.DeleteCommentAsync(commentId, userId.Value);
+        var comment = await _commentService.GetCommentByIdAsync(commentId);
+
+        if (comment == null)
+        {
+            return NotFound(new { message = "Comment not found" });
+        }
+
+        var canDelete = await _commentPermissionService.CanUserDeleteComment(comment, userId.Value);
+        if (!canDelete)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _commentService.TryDeleteCommentById(commentId);
         if (!result)
         {
             return NotFound(new { message = "Comment not found or you are not the author" });
