@@ -41,9 +41,7 @@ public class CommentService
 
     public async Task<Comment?> GetCommentByIdAsync(int commentId)
     {
-        return await _dbContext.Comments
-            .Where(c => c.Id == commentId)
-            .FirstOrDefaultAsync();
+        return await _dbContext.Comments.FindAsync(commentId);
     }
 
 
