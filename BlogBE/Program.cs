@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,9 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<BlogPostService>();
 builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<CommentPermissionService>();
+builder.Services.AddSingleton<ActivityLogService>();
+builder.Services.AddScoped<RedisCacheService>();
+
 builder.Services.AddDbContext<BlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -56,7 +60,17 @@ builder.Services.AddSingleton(serviceProvider =>
     var collectionName = builder.Configuration["Mongo:Collection"];
     return db.GetCollection<ActivityLog>(collectionName);
 });
-builder.Services.AddSingleton<ActivityLogService>();
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+    if (string.IsNullOrEmpty(redisConnectionString))
+    {
+        throw new InvalidOperationException("Redis connection string is not configured.");
+    }
+
+    return ConnectionMultiplexer.Connect(redisConnectionString);
+});
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
