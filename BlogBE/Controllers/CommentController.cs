@@ -80,7 +80,7 @@ public class CommentController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _commentService.TryDeleteCommentById(commentId);
+        var result = await _commentService.TryDeleteCommentById(commentId, comment.PostId);
         if (!result)
         {
             return NotFound(new { message = "Comment not found or you are not the author" });

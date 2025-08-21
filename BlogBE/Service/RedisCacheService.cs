@@ -9,10 +9,12 @@ namespace BlogBE.Service;
 public class RedisCacheService : IInitializable
 {
     private const int MaxVersion = 1000000;
+    private readonly ILogger<RedisCacheService> _logger;
     private readonly IDatabase _redis;
 
-    public RedisCacheService(IConnectionMultiplexer connectionMultiplexer)
+    public RedisCacheService(IConnectionMultiplexer connectionMultiplexer, ILogger<RedisCacheService> logger)
     {
+        _logger = logger;
         _redis = connectionMultiplexer.GetDatabase();
     }
 
@@ -42,7 +44,7 @@ public class RedisCacheService : IInitializable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error retrieving posts from cache: {ex.Message}");
+            _logger.LogError($"Error retrieving posts from cache: {ex.Message}");
             return null; // Return null in case of any error
         }
     }
@@ -58,23 +60,43 @@ public class RedisCacheService : IInitializable
 
     public async Task InvalidatePostsCacheAsync(int userId)
     {
-        //Store the cache version in Redis instead of in-memory to ensure consistency under distributed (multi-instance) scenarios
-        var cacheVersionString = await _redis.StringGetAsync(RedisConstants.CacheVersionKey);
-        var newCacheVersion = int.TryParse(cacheVersionString, out var version) ? version + 1 : 1;
-        if (newCacheVersion > MaxVersion)
+        try
         {
-            newCacheVersion = 1; // Reset to 1 if it exceeds the maximum version
+            //Store the cache version in Redis instead of in-memory to ensure consistency under distributed (multi-instance) scenarios
+            var cacheVersionString = await _redis.StringGetAsync(RedisConstants.CacheVersionKey);
+            var newCacheVersion = int.TryParse(cacheVersionString, out var version) ? version + 1 : 1;
+            if (newCacheVersion > MaxVersion)
+            {
+                newCacheVersion = 1; // Reset to 1 if it exceeds the maximum version
+            }
+
+            await _redis.StringSetAsync(RedisConstants.CacheVersionKey, newCacheVersion);
+
+            //For per user cache invalidation, we can delete all keys that match the user ID pattern
+            var userPostsPattern = $"{RedisConstants.UserPostsKeyPrefix}{userId}:*";
+            var server = _redis.Multiplexer.GetServer(_redis.Multiplexer.GetEndPoints().First());
+            var batch = new List<RedisKey>();
+            var batchSize = 500; // Batch size for deletion
+            foreach (var key in server.Keys(pattern: userPostsPattern, pageSize: batchSize))
+            {
+                batch.Add(key);
+                if (batch.Count >= batchSize)
+                {
+                    await _redis.KeyDeleteAsync(batch.ToArray());
+                    batch.Clear();
+                }
+            }
+
+            // Delete any remaining keys in the batch
+            if (batch.Count > 0)
+            {
+                await _redis.KeyDeleteAsync(batch.ToArray());
+            }
         }
-
-        await _redis.StringSetAsync(RedisConstants.CacheVersionKey, newCacheVersion);
-
-        //For per user cache invalidation, we can delete all keys that match the user ID pattern
-        var userPostsPattern = $"{RedisConstants.UserPostsKeyPrefix}{userId}:*";
-        var server = _redis.Multiplexer.GetServer(_redis.Multiplexer.GetEndPoints().First());
-        var keys = server.Keys(pattern: userPostsPattern).ToArray();
-        if (keys.Length > 0)
+        catch (Exception ex)
         {
-            await _redis.KeyDeleteAsync(keys);
+            _logger.LogError($"Error invalidating posts cache: {ex.Message}");
+            // Handle the error as needed, e.g., log it or rethrow
         }
     }
 
@@ -94,7 +116,7 @@ public class RedisCacheService : IInitializable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error retrieving user posts from cache: {ex.Message}");
+            _logger.LogError($"Error retrieving user posts from cache: {ex.Message}");
             return null; // Return null in case of any error
         }
     }
@@ -105,5 +127,67 @@ public class RedisCacheService : IInitializable
         var serializedPosts = JsonConvert.SerializeObject(posts);
         await _redis.StringSetAsync(cacheKey, serializedPosts,
             TimeSpan.FromSeconds(RedisConstants.ExpirationTimeInSeconds));
+    }
+
+    public async Task CacheCommentsAsync(int postId, List<Comment> comments, int page, int pageSize)
+    {
+        var cacheKey = $"{RedisConstants.PostCommentsKeyPrefix}{postId}:{page}:{pageSize}";
+        var serializedComments = JsonConvert.SerializeObject(comments);
+        await _redis.StringSetAsync(cacheKey, serializedComments,
+            TimeSpan.FromSeconds(RedisConstants.ExpirationTimeInSeconds));
+    }
+
+    public async Task<List<Comment>?> GetCommentsAsync(int postId, int page, int pageSize)
+    {
+        try
+        {
+            var cacheKey = $"{RedisConstants.PostCommentsKeyPrefix}{postId}:{page}:{pageSize}";
+            var cachedString = await _redis.StringGetAsync(cacheKey);
+            if (cachedString.IsNullOrEmpty)
+            {
+                return null; // Cache miss
+            }
+
+            var comments = JsonConvert.DeserializeObject<List<Comment>>(cachedString!);
+            return comments;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error retrieving comments from cache: {ex.Message}");
+            return null; // Return null in case of any error
+        }
+    }
+
+    public async Task InvalidateCommentsCacheAsync(int postId)
+    {
+        try
+        {
+            // For per post cache invalidation, we can delete all keys that match the post ID pattern
+            var postCommentsPattern = $"{RedisConstants.PostCommentsKeyPrefix}{postId}:*";
+            var server = _redis.Multiplexer.GetServer(_redis.Multiplexer.GetEndPoints().First());
+
+            var batch = new List<RedisKey>();
+            var batchSize = 500; // Batch size for deletion
+            //server.Keys is a blocking operation, it is better to use a batch delete approach
+            foreach (var key in server.Keys(pattern: postCommentsPattern, pageSize: batchSize))
+            {
+                batch.Add(key);
+                if (batch.Count >= batchSize)
+                {
+                    await _redis.KeyDeleteAsync(batch.ToArray());
+                    batch.Clear();
+                }
+            }
+
+            // Delete any remaining keys in the batch
+            if (batch.Count > 0)
+            {
+                await _redis.KeyDeleteAsync(batch.ToArray());
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error invalidating comments cache: {ex.Message}");
+        }
     }
 }

@@ -12,7 +12,7 @@ public class ActivityLogService
     private readonly ILogger<ActivityLogService>
         _logger; //This is not a business activity log, this is a system health log instead
 
-    public ActivityLogService(IMongoCollection<ActivityLog> collection, IHttpContextAccessor http,
+    public ActivityLogService(IMongoCollection<ActivityLog> collection,
         IHttpContextAccessor httpContextAccessor, ILogger<ActivityLogService> logger)
     {
         _collection = collection;
