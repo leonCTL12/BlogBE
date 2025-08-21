@@ -27,7 +27,7 @@ public class BlogPostService
 
         _dbContext.BlogPosts.Add(post);
         await _dbContext.SaveChangesAsync();
-        _ = _redisCacheService.InvalidatePostsCacheAsync();
+        _ = _redisCacheService.InvalidatePostsCacheAsync(userId);
     }
 
     public async Task<bool> TryDeletePostAsync(int postId, int userId)
@@ -40,7 +40,7 @@ public class BlogPostService
 
         _dbContext.BlogPosts.Remove(post);
         await _dbContext.SaveChangesAsync();
-        _ = _redisCacheService.InvalidatePostsCacheAsync();
+        _ = _redisCacheService.InvalidatePostsCacheAsync(userId);
 
         return true;
     }
@@ -59,13 +59,13 @@ public class BlogPostService
 
         _dbContext.BlogPosts.Update(post);
         await _dbContext.SaveChangesAsync();
-        _ = _redisCacheService.InvalidatePostsCacheAsync();
+        _ = _redisCacheService.InvalidatePostsCacheAsync(userId);
         return true;
     }
 
     public async Task<List<BlogPost>> GetPostsAsync(int page, int pageSize)
     {
-        var cachedPosts = await _redisCacheService.GetPostsAsync(page, pageSize);
+        var cachedPosts = await _redisCacheService.GetAllPostsAsync(page, pageSize);
         if (cachedPosts != null)
         {
             return cachedPosts;
@@ -77,18 +77,26 @@ public class BlogPostService
             .Take(pageSize)
             .ToListAsync();
 
-        _ = _redisCacheService.CacheBlogPost(post, page, pageSize);
+        _ = _redisCacheService.CacheAllBlogPostAsync(post, page, pageSize);
         return post;
     }
 
     public async Task<List<BlogPost>> GetPostsByUserIdAsync(int userId, int page, int pageSize)
     {
-        return await _dbContext.BlogPosts
+        var cachedPost = await _redisCacheService.GetPostsByUserIdAsync(userId, page, pageSize);
+        if (cachedPost != null)
+        {
+            return cachedPost;
+        }
+
+        var post = await _dbContext.BlogPosts
             .Where(post => post.AuthorId == userId)
             .OrderByDescending(post => post.UpdatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+        _ = _redisCacheService.CacheUserPostsAsync(userId, post, page, pageSize);
+        return post;
     }
 
     public async Task<bool> PostExistsAsync(int postId)
