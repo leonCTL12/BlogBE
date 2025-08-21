@@ -1,8 +1,7 @@
 using BlogBE.PostgreDb;
-using BlogBE.Service;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlogBE.User;
+namespace BlogBE.Service;
 
 public class BlogPostService
 {
@@ -66,7 +65,7 @@ public class BlogPostService
 
     public async Task<List<BlogPost>> GetPostsAsync(int page, int pageSize)
     {
-        var cachedPosts = await _redisCacheService.GetPostsAsync();
+        var cachedPosts = await _redisCacheService.GetPostsAsync(page, pageSize);
         if (cachedPosts != null)
         {
             return cachedPosts;
@@ -78,7 +77,7 @@ public class BlogPostService
             .Take(pageSize)
             .ToListAsync();
 
-        _ = _redisCacheService.CacheBlogPost(post);
+        _ = _redisCacheService.CacheBlogPost(post, page, pageSize);
         return post;
     }
 

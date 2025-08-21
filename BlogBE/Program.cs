@@ -1,5 +1,6 @@
 using System.Text;
 using BlogBE.DTO;
+using BlogBE.General;
 using BlogBE.Jwt;
 using BlogBE.Middleware;
 using BlogBE.MongoDb;
@@ -104,6 +105,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var initializers = scope.ServiceProvider.GetServices<IInitializable>();
+    foreach (var initializer in initializers) await initializer.InitializeAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
