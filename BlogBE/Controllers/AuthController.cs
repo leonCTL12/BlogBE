@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
 
         if (!result.IsValid)
         {
-            return BadRequest(result.Errors);
+            throw new ArgumentException("Invalid registration data.", nameof(dto));
         }
 
 
@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
         {
             _ = _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, null,
                 new { email = dto.Email, reason = "User not found" });
-            return Unauthorized(new { message = "Invalid email or password." });
+            throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
         var isPasswordValid = await _userService.VerifyPasswordAsync(user, dto.Password);
@@ -68,7 +68,7 @@ public class AuthController : ControllerBase
         {
             _ = _activityLogService.LogAsync(ActivityLogEvent.UserLoggedInFailed, user.Id,
                 new { email = dto.Email, reason = "Invalid password" });
-            return Unauthorized(new { message = "Invalid email or password." });
+            throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
         var (token, expiresAt) = _jwtTokenFactory.CreateToken(user);

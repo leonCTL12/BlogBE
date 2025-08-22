@@ -2,7 +2,8 @@ using Microsoft.Extensions.Primitives;
 
 namespace BlogBE.Middleware;
 
-//Middleware is a chain of components that process HTTP requests before they reach the controller.
+//This middleware is for enhancing activity logging by guaranteeing that each HTTP request has a unique correlation ID.
+//Middleware is a chain of components that preprocess or postprocess HTTP requests (i.e. before or after the controller)
 public class RequestContextMiddleware
 {
     private const string CorrelationIdHeader = "X-Correlation-ID";

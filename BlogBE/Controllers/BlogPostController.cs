@@ -33,13 +33,13 @@ public class BlogPostController : ControllerBase
         var validationResult = await validator.ValidateAsync(requestDto);
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors);
+            throw new ArgumentException("Invalid post creation data.", nameof(requestDto));
         }
 
         var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
         if (userId == null)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         await _blogPostService.CreatePostAsync(requestDto.Title, requestDto.Content, userId.Value);
@@ -56,14 +56,14 @@ public class BlogPostController : ControllerBase
 
         if (userId == null)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         var result = await _blogPostService.TryDeletePostAsync(postId, userId.Value);
 
         if (!result)
         {
-            return NotFound(new { message = "Post not found or you are not the author." });
+            throw new KeyNotFoundException("Post not found or you are not the author.");
         }
 
         _ = _activityLogService.LogAsync(ActivityLogEvent.UserDeletedPost, userId.Value);
@@ -80,18 +80,18 @@ public class BlogPostController : ControllerBase
 
         if (userId == null)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         var validationResult = await validator.ValidateAsync(requestDto);
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors);
+            throw new ArgumentException("Invalid post update data.", nameof(requestDto));
         }
 
         if (!await _blogPostService.TryUpdatePostAsync(postId, requestDto.Title, requestDto.Content, userId.Value))
         {
-            return NotFound(new { message = "Post not found or you are not the author." });
+            throw new KeyNotFoundException("Post not found or you are not the author.");
         }
 
         _ = _activityLogService.LogAsync(ActivityLogEvent.UserUpdatedPost, userId.Value);
@@ -111,14 +111,10 @@ public class BlogPostController : ControllerBase
     {
         if (!await _userService.UserExistsAsync(userId))
         {
-            return NotFound(new { message = "User not found." });
+            throw new KeyNotFoundException("User not found.");
         }
 
         var posts = await _blogPostService.GetPostsByUserIdAsync(userId, page, pageSize);
-        if (!posts.Any())
-        {
-            return NotFound(new { message = "No posts" });
-        }
 
         return Ok(posts);
     }

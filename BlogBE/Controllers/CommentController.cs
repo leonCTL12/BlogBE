@@ -37,19 +37,19 @@ public class CommentController : ControllerBase
         var validationResult = await validator.ValidateAsync(requestDto);
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors);
+            throw new ArgumentException("Invalid comment creation data.", nameof(requestDto));
         }
 
         var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
         if (userId == null)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         var postExists = await _blogPostService.PostExistsAsync(requestDto.PostId);
         if (!postExists)
         {
-            return NotFound(new { message = "Post not found" });
+            throw new KeyNotFoundException("Post not found.");
         }
 
         await _commentService.CreateCommentAsync(requestDto.Content, requestDto.PostId, userId.Value);
@@ -64,26 +64,26 @@ public class CommentController : ControllerBase
         var userId = await _userService.GetUserIdByClaimASync(User.FindFirst(ClaimTypes.NameIdentifier));
         if (userId == null)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
         var comment = await _commentService.GetCommentByIdAsync(commentId);
 
         if (comment == null)
         {
-            return NotFound(new { message = "Comment not found" });
+            throw new KeyNotFoundException("Comment not found.");
         }
 
         var canDelete = await _commentPermissionService.CanUserDeleteComment(comment, userId.Value);
         if (!canDelete)
         {
-            return Unauthorized();
+            throw new UnauthorizedAccessException("You do not have permission to delete this comment.");
         }
 
         var result = await _commentService.TryDeleteCommentById(commentId, comment.PostId);
         if (!result)
         {
-            return NotFound(new { message = "Comment not found or you are not the author" });
+            throw new KeyNotFoundException("Comment not found or already deleted.");
         }
 
         _ = _activityLogService.LogAsync(ActivityLogEvent.UserDeletedComment, userId.Value);
@@ -96,7 +96,7 @@ public class CommentController : ControllerBase
         var postExists = await _blogPostService.PostExistsAsync(postId);
         if (!postExists)
         {
-            return NotFound(new { message = "Post not found" });
+            throw new KeyNotFoundException("Post not found.");
         }
 
         var comments = await _commentService.GetCommentForPostAsync(postId, page, pageSize);
