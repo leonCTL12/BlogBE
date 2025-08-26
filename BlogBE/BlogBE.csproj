@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>B1F9F4B6-60C4-4086-B5C0-D14CC60DC150</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,6 +27,12 @@
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
         <PackageReference Include="StackExchange.Redis" Version="2.8.58"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
 </Project>

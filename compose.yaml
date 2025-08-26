@@ -1,0 +1,32 @@
+﻿services:
+  blogbe:
+    image: blogbe
+    build:
+      context: .
+      dockerfile: BlogBE/Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ConnectionStrings__PostGres=Host=postgres;Port=5432;Database=blogdb;Username=postgres;Password=1234
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:17.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: blogdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d blogdb" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
