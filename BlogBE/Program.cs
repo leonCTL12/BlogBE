@@ -101,7 +101,20 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services
+    .AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("PostgresConnection") ?? throw new InvalidOperationException())
+    .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException())
+    .AddMongoDb(
+        sp =>
+        {
+            var connString = builder.Configuration.GetConnectionString("Mongo");
+            return new MongoClient(connString);
+        },
+        sp => builder.Configuration["Mongo:Database"],
+        "mongodb",
+        timeout: TimeSpan.FromSeconds(5)
+    );
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -118,6 +131,7 @@ if (app.Environment.IsDevelopment())
 }
 
 //This is the sequence of middleware that will be executed for each request
+app.MapHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -125,5 +139,5 @@ app.UseMiddleware<RequestContextMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.MapControllers();
 
+
 app.Run();
-//test ci
