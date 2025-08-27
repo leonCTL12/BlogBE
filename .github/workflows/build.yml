@@ -1,0 +1,46 @@
+name: Build & Lint (.NET)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Inject secrets as environment variables if needed for your app
+    # ASP.NET translate __ into : in appsettings.json
+    env:
+      ConnectionStrings__DefaultConnection: ${{ secrets.POSTGRES_CONNECTION }}
+      ConnectionStrings__Mongo: ${{ secrets.MONGO_CONNECTION }}
+      ConnectionStrings__Redis: ${{ secrets.REDIS_CONNECTION }}
+      Jwt__SigningKey: ${{ secrets.JWT_SIGNING_KEY }}
+
+    steps:
+      # 1. Check out the repo
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # 2. Set up .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # 3. Restore NuGet packages
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 4. Build the project
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # 5. (Optional) Run tests — uncomment later
+      # - name: Test
+      #   run: dotnet test --no-build --verbosity normal
+
+      # 6. Check code formatting
+      - name: Lint / Verify format
+        run: dotnet format --verify-no-changes
