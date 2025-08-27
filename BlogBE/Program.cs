@@ -42,7 +42,7 @@ builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<CommentPermissionService>();
 builder.Services.AddSingleton<ActivityLogService>();
 builder.Services.AddScoped<RedisCacheService>();
-
+//Test
 builder.Services.AddDbContext<BlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
