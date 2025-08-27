@@ -44,7 +44,7 @@ builder.Services.AddSingleton<ActivityLogService>();
 builder.Services.AddScoped<RedisCacheService>();
 
 builder.Services.AddDbContext<BlogDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
 var mongoConn = builder.Configuration.GetConnectionString("Mongo")!;
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConn));
