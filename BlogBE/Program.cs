@@ -7,6 +7,7 @@ using BlogBE.MongoDb;
 using BlogBE.PostgreDb;
 using BlogBE.Service;
 using BlogBE.User;
+using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using MongoDB.Driver;
 using Serilog;
 using StackExchange.Redis;
 
+Env.Load("../.env");
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
