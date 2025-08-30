@@ -1,23 +1,19 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
+﻿# Stage 1: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
+# in the container, go to the /src directory
 WORKDIR /src
-COPY ["BlogBE/BlogBE.csproj", "BlogBE/"]
-RUN dotnet restore "BlogBE/BlogBE.csproj"
-COPY . .
-WORKDIR "/src/BlogBE"
-RUN dotnet build "./BlogBE.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./BlogBE.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Copy the project files from host machine to container's current dir (src)
+COPY *.csproj ./
+# Restore dependencies
+RUN dotnet restore
 
-FROM base AS final
+# Copy the rest of the application code
+COPY . ./
+RUN dotnet publish -c Release -o /app/publish
+
+# Stage 2: Create the runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "BlogBE.dll"]

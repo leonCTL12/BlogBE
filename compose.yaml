@@ -1,4 +1,24 @@
 ﻿services:
+  app:
+    build:
+      context: ./BlogBE
+      dockerfile: Dockerfile
+    ports:
+      - "5001:8080"
+    #this capture the value in .env and pass to container as runtime environment variable values
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CONNECTIONSTRINGS__POSTGRESCONNECTION: ${CONNECTIONSTRINGS__POSTGRESCONNECTION}
+      CONNECTIONSTRINGS__MONGO: ${CONNECTIONSTRINGS__MONGO}
+      CONNECTIONSTRINGS__REDIS: ${CONNECTIONSTRINGS__REDIS}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT__SIGNINGKEY: ${JWT__SIGNINGKEY}
+    depends_on:
+      - postgres
+      - mongo
+      - redis
   postgres:
     image: postgres:17.5
     restart: unless-stopped

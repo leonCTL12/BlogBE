@@ -103,6 +103,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services
     .AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("PostgresConnection") ?? throw new InvalidOperationException())
@@ -141,5 +142,15 @@ app.UseMiddleware<RequestContextMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
+
+    // Only auto-migrate in Development
+    if (app.Environment.IsDevelopment())
+    {
+        db.Database.Migrate();
+    }
+}
 
 app.Run();
