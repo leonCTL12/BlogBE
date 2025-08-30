@@ -19,6 +19,12 @@
       - postgres
       - mongo
       - redis
+  # the reason why port part can be removed:
+  # when I run docker compose up, it will create a private network for all services 
+  # the service host name is equal to its service name
+  # for example my app can access redis by the link redis:[port]
+  # but you still need port for dev
+  # otherwise other application like DBeaver, Mongo Compass will not be able to access the database
   postgres:
     image: postgres:17.5
     restart: unless-stopped
